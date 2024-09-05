@@ -173,3 +173,7 @@ VALUES (2, 2, 4.7, true, ST_GeomFromText('POINT(77.1025 28.7041)', 4326)),
        (38, 38, 4.4, true, ST_GeomFromText('POINT(77.2475 28.6439)', 4326)),
        (39, 39, 4.7, true, ST_GeomFromText('POINT(77.2485 28.6459)', 4326)),
        (40, 40, 4.8, true, ST_GeomFromText('POINT(77.2495 28.6479)', 4326));
+
+INSERT INTO wallet_entity (id, user_id, balance)
+VALUES (1, 1, 1000.0),
+       (2, 2, 2000.0);

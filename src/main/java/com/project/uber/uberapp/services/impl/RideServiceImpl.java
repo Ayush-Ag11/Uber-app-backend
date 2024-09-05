@@ -4,6 +4,7 @@ import com.project.uber.uberapp.dto.RideRequestDTO;
 import com.project.uber.uberapp.entities.DriverEntity;
 import com.project.uber.uberapp.entities.Ride;
 import com.project.uber.uberapp.entities.RideRequest;
+import com.project.uber.uberapp.entities.RiderEntity;
 import com.project.uber.uberapp.entities.enums.RideRequestStatus;
 import com.project.uber.uberapp.entities.enums.RideStatus;
 import com.project.uber.uberapp.repositories.RideRepository;
@@ -15,7 +16,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Random;
 
 @Service
@@ -28,7 +28,8 @@ public class RideServiceImpl implements RideService {
 
     @Override
     public Ride getRideById(Long rideId) {
-        return null;
+        return rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("Ride not found with id " + rideId));
     }
 
     @Override
@@ -43,28 +44,29 @@ public class RideServiceImpl implements RideService {
 
         Ride ride = modelMapper.map(rideRequest,Ride.class);
 
-        ride.setRideRequestStatus(RideStatus.CONFIRMED);
+        ride.setRideStatus(RideStatus.CONFIRMED);
         ride.setDriver(driverEntity);
         ride.setOtp(generateRandomOtp());
-        ride.setRider(null);
+        ride.setId(null);
 
         rideRequestService.update(rideRequest);
         return rideRepository.save(ride);
     }
 
     @Override
-    public Ride updateRideStatus(Long rideId, RideStatus rideStatus) {
-        return null;
+    public Ride updateRideStatus(Ride ride, RideStatus rideStatus) {
+        ride.setRideStatus(rideStatus);
+        return rideRepository.save(ride);
     }
 
     @Override
-    public List<Ride> getAllRidesOfRider(Long riderId, PageRequest pageRequest) {
-        return List.of();
+    public Page<Ride> getAllRidesOfRider(RiderEntity rider, PageRequest pageRequest) {
+        return rideRepository.findByRider(rider, pageRequest);
     }
 
     @Override
-    public Page<Ride> getAllRidesOfDriver(Long driverId, PageRequest pageRequest) {
-        return null;
+    public Page<Ride> getAllRidesOfDriver(DriverEntity driver, PageRequest pageRequest) {
+        return rideRepository.findByDriver(driver, pageRequest);
     }
 
     private String generateRandomOtp(){

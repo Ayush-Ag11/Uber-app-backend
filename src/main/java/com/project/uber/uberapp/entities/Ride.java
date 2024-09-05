@@ -42,7 +42,7 @@ public class Ride {
     private PaymentMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)
-    private RideStatus rideRequestStatus;
+    private RideStatus rideStatus;
 
     private String otp;
 

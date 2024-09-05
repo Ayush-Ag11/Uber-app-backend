@@ -18,7 +18,7 @@ public class DriverEntity {
     @JoinColumn(name = "user_id")
     private UserEntity userEntity;
 
-    private double rating;
+    private Double rating;
 
     private Boolean available;
 
