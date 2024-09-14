@@ -11,6 +11,7 @@ import com.project.uber.uberapp.exceptions.ResourceNotFoundException;
 import com.project.uber.uberapp.repositories.RideRequestRepository;
 import com.project.uber.uberapp.repositories.RiderRepository;
 import com.project.uber.uberapp.services.DriverService;
+import com.project.uber.uberapp.services.RatingService;
 import com.project.uber.uberapp.services.RideService;
 import com.project.uber.uberapp.services.RiderService;
 import com.project.uber.uberapp.strategies.RideStrategyManager;
@@ -35,6 +36,7 @@ public class RiderServiceImpl implements RiderService {
     private final RiderRepository riderRepository;
     private final RideService rideService;
     private final DriverService driverService;
+    private final RatingService ratingService;
 
 
     @Override
@@ -65,15 +67,15 @@ public class RiderServiceImpl implements RiderService {
         Ride ride = rideService.getRideById(rideId);
 
         if (!rider.equals(ride.getRider())) {
-            throw new RuntimeException("Rider does not own this ride with id : "+ rideId);
+            throw new RuntimeException("Rider does not own this ride with id : " + rideId);
         }
 
         if (ride.getRideStatus().equals(RideStatus.CONFIRMED)) {
             throw new RuntimeException("Ride status is confirmed, hence can not be cancelled, status is :" + ride.getRideStatus());
         }
 
-       Ride updatedRide = rideService.updateRideStatus(ride, RideStatus.CONFIRMED);
-        driverService.updateDriverAvailability(ride.getDriver(),true);
+        Ride updatedRide = rideService.updateRideStatus(ride, RideStatus.CONFIRMED);
+        driverService.updateDriverAvailability(ride.getDriver(), true);
 
         return modelMapper.map(updatedRide, RideDTO.class);
 
@@ -81,6 +83,19 @@ public class RiderServiceImpl implements RiderService {
 
     @Override
     public DriverDTO rateDriver(Long rideId, Integer rating) {
+        Ride ride = rideService.getRideById(rideId);
+        RiderEntity rider = getCurrentRider();
+
+        if (!rider.equals(ride.getRider())) {
+            throw new RuntimeException("Rider is not the owner of this ride");
+        }
+
+        if (!ride.getRideStatus().equals(RideStatus.ENDED)) {
+            throw new RuntimeException("Ride status is not ended, hence can not start rating, status is :" + ride.getRideStatus());
+        }
+
+        ratingService.rateDriver(ride, rating);
+
         return null;
     }
 

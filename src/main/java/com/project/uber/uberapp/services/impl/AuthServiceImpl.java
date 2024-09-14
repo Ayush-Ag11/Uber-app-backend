@@ -3,11 +3,14 @@ package com.project.uber.uberapp.services.impl;
 import com.project.uber.uberapp.dto.DriverDTO;
 import com.project.uber.uberapp.dto.SignupDTO;
 import com.project.uber.uberapp.dto.UserDTO;
+import com.project.uber.uberapp.entities.DriverEntity;
 import com.project.uber.uberapp.entities.UserEntity;
 import com.project.uber.uberapp.entities.enums.Role;
+import com.project.uber.uberapp.exceptions.ResourceNotFoundException;
 import com.project.uber.uberapp.exceptions.RuntimeConflictExceptions;
 import com.project.uber.uberapp.repositories.UserRepository;
 import com.project.uber.uberapp.services.AuthService;
+import com.project.uber.uberapp.services.DriverService;
 import com.project.uber.uberapp.services.RiderService;
 import com.project.uber.uberapp.services.WalletService;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +28,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RiderService riderService;
     private final WalletService walletService;
+    private final DriverService driverService;
 
 
     @Override
@@ -36,8 +40,8 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public UserDTO signup(SignupDTO signupDTO) {
         UserEntity user = userRepository.findByEmail(signupDTO.getEmail()).orElse(null);
-        if(user != null)
-            throw new RuntimeConflictExceptions("Cannot signup, User already exists with email "+signupDTO.getEmail());
+        if (user != null)
+            throw new RuntimeConflictExceptions("Cannot signup, User already exists with email " + signupDTO.getEmail());
         UserEntity newUser = modelMapper.map(signupDTO, UserEntity.class);
         newUser.setRoles(Set.of(Role.RIDER));
         UserEntity savedUser = userRepository.save(newUser);
@@ -48,7 +52,26 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public DriverDTO onBoardNewDriver(Long userId) {
-        return null;
+    public DriverDTO onBoardNewDriver(Long userId, String vehicleId) {
+
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id : " + userId));
+
+        if (user.getRoles().contains(Role.DRIVER)) {
+            throw new RuntimeConflictExceptions("user with id : " + userId + " is already a driver");
+        }
+
+        DriverEntity createDriver = DriverEntity.builder()
+                .userEntity(user)
+                .rating(0.0)
+                .vehicleId(vehicleId)
+                .available(true)
+                .build();
+
+        user.getRoles().add(Role.DRIVER);
+        userRepository.save(user);
+        DriverEntity driver = driverService.createNewDriver(createDriver);
+
+        return modelMapper.map(driver, DriverDTO.class);
     }
 }

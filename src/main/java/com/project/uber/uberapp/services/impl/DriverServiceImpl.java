@@ -9,10 +9,7 @@ import com.project.uber.uberapp.entities.RideRequest;
 import com.project.uber.uberapp.entities.enums.RideRequestStatus;
 import com.project.uber.uberapp.entities.enums.RideStatus;
 import com.project.uber.uberapp.repositories.DriverRepository;
-import com.project.uber.uberapp.services.DriverService;
-import com.project.uber.uberapp.services.PaymentService;
-import com.project.uber.uberapp.services.RideRequestService;
-import com.project.uber.uberapp.services.RideService;
+import com.project.uber.uberapp.services.*;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -31,6 +28,7 @@ public class DriverServiceImpl implements DriverService {
     private final RideService rideService;
     private final ModelMapper modelMapper;
     private final PaymentService paymentService;
+    private final RatingService ratingService;
 
     @Override
     @Transactional
@@ -95,8 +93,9 @@ public class DriverServiceImpl implements DriverService {
 
         paymentService.createNewPayment(savedRide);
 
-        return modelMapper.map(savedRide, RideDTO.class);
+        ratingService.createNewRating(savedRide);
 
+        return modelMapper.map(savedRide, RideDTO.class);
     }
 
     @Override
@@ -124,6 +123,19 @@ public class DriverServiceImpl implements DriverService {
 
     @Override
     public RiderDTO rateRider(Long rideId, Integer rating) {
+        Ride ride = rideService.getRideById(rideId);
+        DriverEntity driver = getCurrentDriver();
+
+        if (!driver.equals(ride.getDriver())) {
+            throw new RuntimeException("Driver is not the owner of this ride");
+        }
+
+        if (!ride.getRideStatus().equals(RideStatus.ENDED)) {
+            throw new RuntimeException("Ride status is not ended, hence can not start rating, status is :" + ride.getRideStatus());
+        }
+
+        ratingService.rateRider(ride, rating);
+
         return null;
     }
 
@@ -151,5 +163,10 @@ public class DriverServiceImpl implements DriverService {
         driver.setAvailable(available);
         return driverRepository.save(driver);
 
+    }
+
+    @Override
+    public DriverEntity createNewDriver(DriverEntity driver) {
+        return driverRepository.save(driver);
     }
 }
