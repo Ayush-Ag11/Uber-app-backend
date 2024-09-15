@@ -1,7 +1,6 @@
 package com.project.uber.uberapp.services;
 
 import com.project.uber.uberapp.dto.DriverDTO;
-import com.project.uber.uberapp.dto.LoginResponseDTO;
 import com.project.uber.uberapp.dto.SignupDTO;
 import com.project.uber.uberapp.dto.UserDTO;
 
