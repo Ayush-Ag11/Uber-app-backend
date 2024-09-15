@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,8 +64,8 @@ public class RiderServiceImpl implements RiderService {
 
     @Override
     public RideDTO cancelRide(Long rideId) {
-        RiderEntity rider = getCurrentRider();
         Ride ride = rideService.getRideById(rideId);
+        RiderEntity rider = getCurrentRider();
 
         if (!rider.equals(ride.getRider())) {
             throw new RuntimeException("Rider does not own this ride with id : " + rideId);
@@ -116,7 +117,7 @@ public class RiderServiceImpl implements RiderService {
     public RiderEntity createNewRider(UserEntity user) {
         RiderEntity rider = RiderEntity
                 .builder()
-                .userEntity(user)
+                .user(user)
                 .rating(0.0)
                 .build();
         return riderRepository.save(rider);
@@ -124,7 +125,8 @@ public class RiderServiceImpl implements RiderService {
 
     @Override
     public RiderEntity getCurrentRider() {
-        return riderRepository.findById(1L).orElseThrow(() ->
-                new ResourceNotFoundException("Rider not found with id " + 1));
+        UserEntity user = (UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return riderRepository.findByUser(user).orElseThrow(() ->
+                new ResourceNotFoundException("Rider not associated with user with id " + user.getId()));
     }
 }

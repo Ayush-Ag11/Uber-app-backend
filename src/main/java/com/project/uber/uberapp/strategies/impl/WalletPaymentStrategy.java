@@ -23,12 +23,12 @@ public class WalletPaymentStrategy implements PaymentStrategy {
         RiderEntity rider = payment.getRide().getRider();
         DriverEntity driver = payment.getRide().getDriver();
 
-        walletService.deductMoneyFromWallet(rider.getUserEntity(), payment.getAmount(), null,
+        walletService.deductMoneyFromWallet(rider.getUser(), payment.getAmount(), null,
                 payment.getRide(), TransactionMethod.RIDE);
 
         double driverCut = payment.getAmount() * (1 - PLATFORM_COMMISSION);
 
-        walletService.addMoney(driver.getUserEntity(), driverCut, null,
+        walletService.addMoney(driver.getUser(), driverCut, null,
                 payment.getRide(), TransactionMethod.RIDE);
 
         payment.setPaymentStatus(PaymentStatus.CONFIRMED);

@@ -21,7 +21,7 @@ public class DriverEntity {
 
     @OneToOne
     @JoinColumn(name = "user_id")
-    private UserEntity userEntity;
+    private UserEntity user;
 
     private Double rating;
 
